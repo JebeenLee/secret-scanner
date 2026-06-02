@@ -1,8 +1,7 @@
-# Secret Scanner (Glass Box)
+# Secret Scanner
 
 > 프론트엔드 코드에 하드코딩된 민감정보(시크릿)를 **배포 전에** 찾아내는 셀프 점검 도구
 >
-> *"프론트엔드는 유리상자다 — 숨긴 비밀은 비밀이 아니다."*
 
 인천대학교 Web Programming 프로젝트 과제 (2026)
 
