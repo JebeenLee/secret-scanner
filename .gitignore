@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.vite/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Course submission docs (개인정보 학번/이름 포함 — 공개 저장소에 올리지 않음)
+202101509_이제빈_14주차.md
+프로젝트설계_14주차.md
