@@ -1,0 +1,35 @@
+services:
+  # PostgreSQL — 시크릿 백과사전 / 익명 통계
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: scanner
+      POSTGRES_PASSWORD: scanner
+      POSTGRES_DB: secret_scanner
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Express API
+  backend:
+    build: ./backend
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgres://scanner:scanner@db:5432/secret_scanner
+      AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"   # 개발 편의용 직접 접근 (운영 트래픽은 nginx 경유)
+
+  # Nginx — React 정적 서빙 + /api 리버스 프록시
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

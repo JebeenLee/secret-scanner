@@ -38,6 +38,40 @@
 | Infra | Nginx (Reverse Proxy), Docker (docker-compose) |
 | CI/CD | GitHub Actions |
 
+## 프로젝트 구조
+
+```
+secret-scanner/
+├── frontend/           # React (Vite) — 탐지 엔진 + UI (브라우저에서 분석)
+│   ├── src/lib/detector.js   # 패턴 매칭 + 엔트로피 탐지
+│   ├── nginx.conf            # 정적 서빙 + /api 리버스 프록시
+│   └── Dockerfile            # build → nginx 멀티스테이지
+├── backend/            # Express API — 백과사전 / 통계 / AI 프록시
+│   ├── src/index.js          # 라우트
+│   ├── src/secretTypes.js    # 시크릿 종류 백과사전
+│   └── src/db.js             # PostgreSQL 연결
+└── docker-compose.yml  # nginx(web) + backend + PostgreSQL(db)
+```
+
+## 실행 방법
+
+### 로컬 개발
+
+```bash
+# 백엔드 (터미널 1)
+cd backend && npm install && npm run dev    # http://localhost:4000
+
+# 프론트엔드 (터미널 2)
+cd frontend && npm install && npm run dev   # http://localhost:5173
+```
+
+### Docker (전체 스택)
+
+```bash
+cp .env.example .env          # 필요 시 AI_GATEWAY_API_KEY 입력
+docker compose up --build     # http://localhost:8080
+```
+
 ## 상태
 
 개발 진행 중 (course project, 2026-06).
