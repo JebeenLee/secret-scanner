@@ -24,6 +24,7 @@
   border: 1px solid #cfe3ff;
 }
 
+/* 입력 */
 .input {
   margin-top: 24px;
 }
@@ -62,44 +63,81 @@
   border-color: #0b62d6;
 }
 
+/* 결과 */
 .results {
   margin-top: 32px;
 }
 
-.results h2 {
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.summary h2 {
   font-size: 18px;
-}
-
-.results .clean {
-  color: #46a758;
-}
-
-.results ul {
-  list-style: none;
-  padding: 0;
   margin: 0;
 }
 
-.results li {
+.chips {
+  display: flex;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border: 1.5px solid;
+  border-radius: 999px;
+}
+
+.clean {
+  color: #46a758;
+  margin-top: 12px;
+}
+
+.cards {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.card.open {
+  border-color: #d6d6db;
+}
+
+.card-head {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  margin-bottom: 8px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
 }
 
 .risk {
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
   color: #fff;
   padding: 3px 8px;
   border-radius: 5px;
+  white-space: nowrap;
 }
 
-.results code {
+.card-head code {
   font-family: ui-monospace, monospace;
   background: #f5f5f7;
   padding: 2px 6px;
@@ -111,6 +149,83 @@
   margin-left: auto;
   font-size: 12px;
   color: #888;
+  white-space: nowrap;
+}
+
+.caret {
+  color: #aaa;
+}
+
+.card-body {
+  padding: 4px 14px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  background: #fafafa;
+}
+
+.card-body p {
+  margin: 6px 0;
+}
+
+.card-body b {
+  display: inline-block;
+  min-width: 64px;
+  color: #0b62d6;
+}
+
+.muted {
+  color: #999;
+}
+
+/* 이력 */
+.history {
+  margin-top: 36px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-head h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.history ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+
+.history li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  padding: 5px 0;
+  color: #555;
+}
+
+.history .time {
+  color: #999;
+  min-width: 160px;
+}
+
+.history .dot {
+  font-size: 12px;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #0b62d6;
+  cursor: pointer;
+  font-size: 13px;
 }
 
 .foot {
