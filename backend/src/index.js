@@ -94,6 +94,23 @@ app.get('/api/stats', async (req, res) => {
   res.json({ totalScans: memScans, totalFindings: byType.reduce((a, b) => a + b.count, 0), byType, mode: 'memory' });
 });
 
+// 전체 통계 초기화
+app.delete('/api/stats', async (req, res) => {
+  if (isDbReady()) {
+    try {
+      await pool.query('DELETE FROM scan_stats');
+      await pool.query(`UPDATE metrics SET value = 0 WHERE key = 'total_scans'`);
+      return res.json({ cleared: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  // 메모리 폴백
+  for (const k of Object.keys(memStats)) delete memStats[k];
+  memScans = 0;
+  res.json({ cleared: true, mode: 'memory' });
+});
+
 // AI 보조 분석 — 마스킹된 후보 + 주변 맥락만 입력 (원문 시크릿 전송 X)
 // TODO(M3): Vercel AI Gateway + AI SDK generateObject 로 진위 판정 / 수정 제안
 app.post('/api/ai/verify', async (req, res) => {

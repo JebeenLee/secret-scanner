@@ -185,9 +185,16 @@
   padding-top: 16px;
 }
 
-.stats h3 {
+.stats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.stats-head h3 {
   font-size: 15px;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .stat-nums {

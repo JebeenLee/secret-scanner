@@ -12,13 +12,23 @@ export default function StatsDashboard({ refreshKey }) {
       .catch(() => {});
   }, [refreshKey]);
 
+  // 전체 통계 비우기 → 비면 대시보드 자체가 사라짐
+  function clearStats() {
+    fetch('/api/stats', { method: 'DELETE' })
+      .then(() => setStats({ totalScans: 0, totalFindings: 0, byType: [] }))
+      .catch(() => {});
+  }
+
   if (!stats || !stats.byType?.length) return null;
 
   const max = Math.max(...stats.byType.map((t) => t.count), 1);
 
   return (
     <section className="stats">
-      <h3>전체 통계 (익명 · 종류·개수만 집계)</h3>
+      <div className="stats-head">
+        <h3>전체 통계 (익명 · 종류·개수만 집계)</h3>
+        <button className="link" onClick={clearStats}>전체 비우기</button>
+      </div>
       <div className="stat-nums">
         <span>총 스캔 <b>{stats.totalScans}</b>회</span>
         <span>누적 발견 <b>{stats.totalFindings}</b>건</span>
