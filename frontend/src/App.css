@@ -57,6 +57,25 @@
   font-size: 14px;
 }
 
+.picker {
+  font-size: 13px;
+  color: #555;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.picker input[type="file"] {
+  max-width: 180px;
+  font-size: 12px;
+}
+
+.hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #888;
+}
+
 .actions button.primary {
   background: #0b62d6;
   color: #fff;
@@ -96,6 +115,18 @@
 .clean {
   color: #46a758;
   margin-top: 12px;
+}
+
+.scanned-files {
+  font-size: 12px;
+  color: #666;
+  margin: 8px 0 0;
+}
+
+.fname {
+  color: #0b62d6;
+  margin-right: 8px;
+  font-family: ui-monospace, monospace;
 }
 
 .cards {
