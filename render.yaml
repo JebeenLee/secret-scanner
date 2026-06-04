@@ -1,5 +1,11 @@
-# Render Blueprint — 단일 Docker 웹 서비스 (nginx + Express)
+# Render Blueprint — Docker 웹 서비스 + 관리형 PostgreSQL
 # https://render.com/docs/blueprint-spec
+
+databases:
+  - name: secret-scanner-db
+    plan: free
+    ipAllowList: []          # 외부 차단 — Render 내부 서비스에서만 연결
+
 services:
   - type: web
     name: secret-scanner
@@ -8,6 +14,8 @@ services:
     dockerContext: .
     plan: free
     envVars:
-      # Neon PostgreSQL 연결 문자열 — Render 대시보드에서 직접 입력 (sync:false)
+      # 위 Render Postgres의 연결 문자열을 자동 주입 (대시보드에서 직접 입력 불필요)
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: secret-scanner-db
+          property: connectionString
