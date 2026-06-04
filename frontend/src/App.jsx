@@ -15,33 +15,74 @@ const config = {
 
 // 총 용량 제한 — 브라우저에서 스캔하므로 메인스레드 프리징 방지용 (느린 기기에서도 ~1초 내)
 const MAX_TOTAL_BYTES = 5 * 1024 * 1024; // 5MB
-// 폴더 업로드 시 제외할 디렉토리 / 바이너리 형식
 const SKIP_DIR = /(^|\/)(node_modules|\.git|dist|build|\.next|coverage|vendor)\//i;
+const SKIP_DIRNAMES = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'coverage', 'vendor']);
 const SKIP_EXT = /\.(png|jpe?g|gif|webp|bmp|ico|svg|woff2?|ttf|eot|otf|pdf|zip|gz|tar|7z|rar|mp4|mp3|mov|avi|exe|dll|so|class|jar|wasm|lock)$/i;
 
 const riskRank = (r) => RISK_ORDER.indexOf(r);
 const mb = (b) => (b / 1024 / 1024).toFixed(2);
 
+// 드래그앤드롭 폴더 재귀 순회 (webkitGetAsEntry)
+function walkEntry(entry, out) {
+  return new Promise((resolve) => {
+    if (entry.isFile) {
+      entry.file(
+        (file) => { out.push({ file, path: entry.fullPath.replace(/^\//, '') }); resolve(); },
+        () => resolve()
+      );
+    } else if (entry.isDirectory) {
+      if (SKIP_DIRNAMES.has(entry.name)) { resolve(); return; }
+      const reader = entry.createReader();
+      const read = () => {
+        reader.readEntries(async (batch) => {
+          if (!batch.length) { resolve(); return; }
+          for (const e of batch) await walkEntry(e, out);
+          read(); // readEntries는 배치로 반환 — 빌 때까지 반복
+        }, () => resolve());
+      };
+      read();
+    } else {
+      resolve();
+    }
+  });
+}
+
+async function collectFromDataTransfer(dt) {
+  const out = [];
+  const entries = (dt.items ? Array.from(dt.items) : [])
+    .map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null))
+    .filter(Boolean);
+  if (entries.length) {
+    for (const entry of entries) await walkEntry(entry, out);
+  } else {
+    for (const file of Array.from(dt.files || [])) out.push({ file, path: file.name });
+  }
+  return out;
+}
+
 export default function App() {
   const [code, setCode] = useState('');
   const [findings, setFindings] = useState(null);
-  const [info, setInfo] = useState({});      // 시크릿 종류 백과사전 (id → 해설)
-  const [open, setOpen] = useState(null);     // 펼쳐진 카드 인덱스
+  const [info, setInfo] = useState({});
+  const [open, setOpen] = useState(null);
   const [history, setHistory] = useState(loadHistory());
   const [statsRefresh, setStatsRefresh] = useState(0);
   const [scannedFiles, setScannedFiles] = useState([]);
   const [scanNote, setScanNote] = useState('');
-  const dirRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef(null);
 
-  // 폴더 선택용 input 에 webkitdirectory 속성 부여
+  // 드롭존 밖에 떨어뜨려도 브라우저가 파일을 열지 않도록 차단
   useEffect(() => {
-    if (dirRef.current) {
-      dirRef.current.setAttribute('webkitdirectory', '');
-      dirRef.current.setAttribute('directory', '');
-    }
+    const prevent = (e) => e.preventDefault();
+    window.addEventListener('dragover', prevent);
+    window.addEventListener('drop', prevent);
+    return () => {
+      window.removeEventListener('dragover', prevent);
+      window.removeEventListener('drop', prevent);
+    };
   }, []);
 
-  // 백엔드에서 시크릿 종류 백과사전을 불러와 해설 카드에 사용
   useEffect(() => {
     fetch('/api/secret-types')
       .then((r) => (r.ok ? r.json() : []))
@@ -78,36 +119,29 @@ export default function App() {
     if (text.trim()) record(result);
   }
 
-  // 파일/폴더 스캔 — 바이너리·무시 디렉토리 제외 후, 총 용량 5MB까지만 스캔
-  async function scanFileList(fileList) {
-    const incoming = Array.from(fileList || []);
-    if (!incoming.length) return;
+  // {file, path} 목록을 필터·용량제한 후 스캔
+  async function scanItems(items) {
+    if (!items.length) return;
+    const candidates = items.filter(({ file, path }) => !SKIP_DIR.test(path) && !SKIP_EXT.test(file.name));
 
-    const candidates = incoming.filter((f) => {
-      const path = f.webkitRelativePath || f.name;
-      return !SKIP_DIR.test(path) && !SKIP_EXT.test(f.name);
-    });
-
-    // 누적 용량이 제한을 넘으면 거기서 중단
     const picked = [];
     let bytes = 0;
-    for (const f of candidates) {
-      if (bytes + f.size > MAX_TOTAL_BYTES) break;
-      picked.push(f);
-      bytes += f.size;
+    for (const it of candidates) {
+      if (bytes + it.file.size > MAX_TOTAL_BYTES) break;
+      picked.push(it);
+      bytes += it.file.size;
     }
-    const skipped = incoming.length - picked.length;
+    const skipped = items.length - picked.length;
 
     const all = [];
-    for (const file of picked) {
+    for (const { file, path } of picked) {
       const text = await file.text();
-      const label = file.webkitRelativePath || file.name;
-      for (const f of scan(text)) all.push({ ...f, file: label });
+      for (const f of scan(text)) all.push({ ...f, file: path });
     }
     all.sort((a, b) => riskRank(a.risk) - riskRank(b.risk) || a.line - b.line);
 
     setFindings(all);
-    setScannedFiles(picked.map((f) => f.webkitRelativePath || f.name));
+    setScannedFiles(picked.map((it) => it.path));
     setScanNote(
       skipped > 0
         ? `${mb(bytes)}MB 스캔 · ${skipped}개 건너뜀 (용량 ${MAX_TOTAL_BYTES / 1024 / 1024}MB 초과 또는 바이너리 제외)`
@@ -120,9 +154,15 @@ export default function App() {
 
   function onPick(e) {
     const input = e.currentTarget;
-    scanFileList(input.files).finally(() => {
-      input.value = ''; // 같은 항목 다시 선택 가능하게
-    });
+    const items = Array.from(input.files || []).map((file) => ({ file, path: file.webkitRelativePath || file.name }));
+    scanItems(items).finally(() => { input.value = ''; });
+  }
+
+  async function onDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    const items = await collectFromDataTransfer(e.dataTransfer);
+    scanItems(items);
   }
 
   const summary = findings ? summarize(findings) : null;
@@ -139,16 +179,25 @@ export default function App() {
         <textarea
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="코드를 붙여넣거나 파일/폴더를 선택하세요..."
+          placeholder="코드를 붙여넣고 [스캔하기]..."
           spellCheck={false}
         />
         <div className="actions">
-          <label className="picker">파일 <input type="file" multiple onChange={onPick} /></label>
-          <label className="picker">폴더 <input type="file" ref={dirRef} onChange={onPick} /></label>
           <button className="primary" onClick={() => runScan(code)}>스캔하기</button>
           <button onClick={() => { setCode(SAMPLE); runScan(SAMPLE); }}>예제 체험</button>
         </div>
-        <p className="hint">파일·폴더 합쳐 최대 {MAX_TOTAL_BYTES / 1024 / 1024}MB까지 스캔됩니다. (node_modules·바이너리 자동 제외)</p>
+
+        <div
+          className={`dropzone ${dragging ? 'dragging' : ''}`}
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false); }}
+          onDrop={onDrop}
+        >
+          <p className="dz-title">파일·폴더를 여기에 끌어다 놓기</p>
+          <p className="dz-sub">또는 클릭해서 파일 선택 (여러 개 가능) · 폴더는 드래그 · 최대 {MAX_TOTAL_BYTES / 1024 / 1024}MB (node_modules·바이너리 제외)</p>
+        </div>
+        <input ref={fileRef} type="file" multiple onChange={onPick} hidden />
       </section>
 
       {findings && (

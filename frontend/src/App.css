@@ -57,21 +57,36 @@
   font-size: 14px;
 }
 
-.picker {
-  font-size: 13px;
-  color: #555;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+/* 드롭존 */
+.dropzone {
+  margin-top: 14px;
+  border: 2px dashed #c9c9d0;
+  border-radius: 10px;
+  padding: 26px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.picker input[type="file"] {
-  max-width: 180px;
-  font-size: 12px;
+.dropzone:hover {
+  border-color: #0b62d6;
+  background: #f7faff;
 }
 
-.hint {
-  margin: 10px 0 0;
+.dropzone.dragging {
+  border-color: #0b62d6;
+  background: #eef6ff;
+}
+
+.dz-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.dz-sub {
+  margin: 0;
   font-size: 12px;
   color: #888;
 }
