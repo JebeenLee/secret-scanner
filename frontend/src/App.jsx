@@ -1,16 +1,9 @@
 import { useState, useEffect } from 'react';
-import { scan, summarize } from './lib/detector';
+import { scan, summarize, countByType } from './lib/detector';
 import { loadHistory, addHistory, clearHistory } from './lib/history';
+import { RISK_COLOR, RISK_LABEL, RISK_ORDER } from './lib/constants';
+import StatsDashboard from './StatsDashboard';
 import './App.css';
-
-const RISK_COLOR = {
-  critical: '#e5484d',
-  high: '#f76808',
-  medium: '#ffc53d',
-  low: '#46a758',
-};
-const RISK_LABEL = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
-const RISK_ORDER = ['critical', 'high', 'medium', 'low'];
 
 const SAMPLE = `// 예제 코드 — 하드코딩된 시크릿이 들어 있습니다
 const awsKey = "AKIAQ7Z3WMPLN5RT8XYV";
@@ -26,6 +19,7 @@ export default function App() {
   const [info, setInfo] = useState({});      // 시크릿 종류 백과사전 (id → 해설)
   const [open, setOpen] = useState(null);     // 펼쳐진 카드 인덱스
   const [history, setHistory] = useState(loadHistory());
+  const [statsRefresh, setStatsRefresh] = useState(0);
 
   // 백엔드에서 시크릿 종류 백과사전을 불러와 해설 카드에 사용
   useEffect(() => {
@@ -39,12 +33,24 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  // 익명 통계 전송 (종류·개수만) → 대시보드 갱신
+  function reportStats(result) {
+    fetch('/api/stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ total: result.length, counts: countByType(result) }),
+    })
+      .then(() => setStatsRefresh((x) => x + 1))
+      .catch(() => {});
+  }
+
   function runScan(text) {
     const result = scan(text);
     setFindings(result);
     setOpen(null);
     if (text.trim()) {
       setHistory(addHistory({ at: new Date().toISOString(), total: result.length, summary: summarize(result) }));
+      reportStats(result);
     }
   }
 
@@ -129,6 +135,8 @@ export default function App() {
         </section>
       )}
 
+      <StatsDashboard refreshKey={statsRefresh} />
+
       {history.length > 0 && (
         <section className="history">
           <div className="history-head">
@@ -149,7 +157,7 @@ export default function App() {
       )}
 
       <footer className="foot">
-        Secret Scanner — 다음 단계: 익명 통계 대시보드 · AI 보조 분석
+        Secret Scanner — 다음 단계: AI 보조 분석
       </footer>
     </div>
   );

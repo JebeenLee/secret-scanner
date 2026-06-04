@@ -178,6 +178,74 @@
   color: #999;
 }
 
+/* 통계 대시보드 */
+.stats {
+  margin-top: 36px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.stats h3 {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.stat-nums {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.stat-nums b {
+  color: #0b62d6;
+  font-size: 15px;
+}
+
+.bars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.bars li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.bar-label {
+  width: 150px;
+  font-size: 12px;
+  color: #444;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.bar {
+  flex: 1;
+  height: 14px;
+  background: #f0f0f3;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.bar-count {
+  width: 36px;
+  font-size: 12px;
+  color: #555;
+  font-variant-numeric: tabular-nums;
+}
+
 /* 이력 */
 .history {
   margin-top: 36px;

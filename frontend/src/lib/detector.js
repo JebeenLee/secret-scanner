@@ -95,3 +95,10 @@ export function summarize(findings) {
   for (const f of findings) s[f.risk] = (s[f.risk] || 0) + 1;
   return s;
 }
+
+// 시크릿 종류별 개수 (익명 통계 전송용 — 종류·개수만)
+export function countByType(findings) {
+  const c = {};
+  for (const f of findings) c[f.type] = (c[f.type] || 0) + 1;
+  return c;
+}

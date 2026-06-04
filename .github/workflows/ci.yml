@@ -1,0 +1,45 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Frontend — install & build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Backend — install
+        working-directory: backend
+        run: npm ci
+
+  deploy:
+    name: Deploy (Render)
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            curl -fsS -X POST "$HOOK"
+            echo "Render 배포 트리거 완료"
+          else
+            echo "RENDER_DEPLOY_HOOK 시크릿 미설정 — 배포 단계 건너뜀 (Render 자동배포로 처리 가능)"
+          fi

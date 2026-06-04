@@ -1,0 +1,13 @@
+# Render Blueprint — 단일 Docker 웹 서비스 (nginx + Express)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: secret-scanner
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      # Neon PostgreSQL 연결 문자열 — Render 대시보드에서 직접 입력 (sync:false)
+      - key: DATABASE_URL
+        sync: false
