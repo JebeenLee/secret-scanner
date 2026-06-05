@@ -70,6 +70,7 @@ export default function App() {
   const [scannedFiles, setScannedFiles] = useState([]);
   const [scanNote, setScanNote] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [ai, setAi] = useState({});
   const fileRef = useRef(null);
 
   // 드롭존 밖에 떨어뜨려도 브라우저가 파일을 열지 않도록 차단
@@ -165,6 +166,25 @@ export default function App() {
     scanItems(items);
   }
 
+  // AI 보조 분석 — 마스킹된 값만 전송 (원문 X)
+  async function aiVerify(i, f) {
+    setAi((prev) => ({ ...prev, [i]: { loading: true } }));
+    try {
+      const r = await fetch('/api/ai/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: f.type, name: f.name, masked: f.masked }),
+      });
+      const data = await r.json();
+      setAi((prev) => ({
+        ...prev,
+        [i]: r.ok ? { data } : { error: data.needsKey ? 'AI 키가 설정되지 않았습니다.' : data.error || '오류' },
+      }));
+    } catch {
+      setAi((prev) => ({ ...prev, [i]: { error: '요청 실패' } }));
+    }
+  }
+
   const summary = findings ? summarize(findings) : null;
 
   return (
@@ -241,15 +261,31 @@ export default function App() {
                       </span>
                       <span className="caret">{isOpen ? '▾' : '▸'}</span>
                     </button>
-                    {isOpen && meta && (
+                    {isOpen && (
                       <div className="card-body">
-                        <p><b>정체</b> {meta.what}</p>
-                        <p><b>노출 영향</b> {meta.impact}</p>
-                        <p><b>수정 방법</b> {meta.fix}</p>
+                        {meta ? (
+                          <>
+                            <p><b>정체</b> {meta.what}</p>
+                            <p><b>노출 영향</b> {meta.impact}</p>
+                            <p><b>수정 방법</b> {meta.fix}</p>
+                          </>
+                        ) : (
+                          <p className="muted">해설 정보를 불러오지 못했습니다. (백엔드 /api/secret-types 확인)</p>
+                        )}
+                        <div className="ai-block">
+                          <button className="ai-btn" onClick={() => aiVerify(i, f)} disabled={ai[i]?.loading}>
+                            {ai[i]?.loading ? 'AI 분석 중…' : 'AI로 검증'}
+                          </button>
+                          {ai[i]?.error && <p className="ai-error">{ai[i].error}</p>}
+                          {ai[i]?.data && (
+                            <div className="ai-result">
+                              <p><b>AI 판정</b> {ai[i].data.isReal ? '실제 시크릿 가능성 높음' : '오탐(placeholder) 가능성'} · 확신도 {ai[i].data.confidence}</p>
+                              <p><b>근거</b> {ai[i].data.reason}</p>
+                              <p><b>AI 수정 제안</b> {ai[i].data.fix}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    {isOpen && !meta && (
-                      <div className="card-body"><p className="muted">해설 정보를 불러오지 못했습니다. (백엔드 /api/secret-types 확인)</p></div>
                     )}
                   </li>
                 );

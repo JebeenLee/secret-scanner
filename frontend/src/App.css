@@ -224,6 +224,49 @@
   color: #999;
 }
 
+/* AI 보조 분석 */
+.ai-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e0e0e0;
+}
+
+.ai-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #6e56cf;
+  background: #f5f2ff;
+  color: #6e56cf;
+  cursor: pointer;
+}
+
+.ai-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ai-error {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #e5484d;
+}
+
+.ai-result {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f5f2ff;
+  border-radius: 6px;
+}
+
+.ai-result p {
+  margin: 4px 0;
+}
+
+.ai-result b {
+  color: #6e56cf;
+}
+
 /* 통계 대시보드 */
 .stats {
   margin-top: 36px;
