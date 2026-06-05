@@ -50,6 +50,8 @@ function makeFinding(pattern, match, lineIdx) {
     masked: mask(secret),
     length: secret.length,
     entropy: Number(entropy(secret).toFixed(2)),
+    value: secret,   // 내부용 — maskedLine 생성 후 제거 (반환 X)
+    lineIdx,         // 내부용
   };
 }
 
@@ -85,8 +87,19 @@ export function scan(text) {
     }
   });
 
-  found.sort((a, b) => RISK_RANK[a.risk] - RISK_RANK[b.risk] || a.line - b.line);
-  return found;
+  // 마스킹된 주변 코드 한 줄 생성 — 같은 줄의 모든 시크릿을 마스킹 (원문 노출 방지)
+  for (const f of found) {
+    let snippet = lines[f.lineIdx] ?? '';
+    for (const g of found) {
+      if (g.lineIdx === f.lineIdx && g.value) snippet = snippet.split(g.value).join(g.masked);
+    }
+    f.maskedLine = snippet.trim().slice(0, 200);
+  }
+
+  // 내부 필드(value, lineIdx) 제거 후 반환 — 원문 value는 findings에 남기지 않는다
+  const result = found.map(({ value, lineIdx, ...rest }) => rest);
+  result.sort((a, b) => RISK_RANK[a.risk] - RISK_RANK[b.risk] || a.line - b.line);
+  return result;
 }
 
 // 위험도별 개수 요약

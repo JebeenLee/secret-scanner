@@ -173,7 +173,7 @@ export default function App() {
       const r = await fetch('/api/ai/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: f.type, name: f.name, masked: f.masked }),
+        body: JSON.stringify({ type: f.type, name: f.name, masked: f.masked, snippet: f.maskedLine }),
       });
       const data = await r.json();
       setAi((prev) => ({

@@ -135,12 +135,13 @@ app.post('/api/ai/verify', async (req, res) => {
       model: google(AI_MODEL),
       output: Output.object({ schema: VerdictSchema }),
       prompt:
-        `코드에서 발견된 하드코딩 의심 시크릿을 평가하세요. 원문 값은 마스킹돼 있습니다.\n` +
+        `코드에서 발견된 하드코딩 의심 시크릿을 평가하세요. 시크릿 원문 값은 마스킹돼 있습니다.\n` +
         `- 종류: ${name || type}\n` +
         `- 마스킹된 값: ${masked}\n` +
-        (snippet ? `- 주변 코드(마스킹됨): ${snippet}\n` : '') +
-        `\n실제 유효한 시크릿일 가능성(isReal), 확신도(confidence: high/medium/low), ` +
-        `근거(reason), 수정 방법(fix)을 한국어로 판정하세요. 형식이 placeholder/예시면 isReal=false.`,
+        (snippet ? `- 주변 코드(시크릿은 마스킹됨): ${snippet}\n` : '') +
+        `\n변수명·주석 등 맥락을 함께 보고 판정하세요. 변수명이 example/test/sample/dummy 이거나 ` +
+        `주석/문서용 예시로 보이면 isReal=false. 실제 운영 키로 보이면 isReal=true.\n` +
+        `실제 유효한 시크릿일 가능성(isReal), 확신도(confidence: high/medium/low), 근거(reason), 수정 방법(fix)을 한국어로 판정하세요.`,
     });
     res.json(output);
   } catch (err) {
