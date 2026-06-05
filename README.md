@@ -33,7 +33,7 @@
 |---|---|
 | Frontend | React (Vite), Prism.js |
 | Backend | Node.js, Express |
-| AI / API | Vercel AI Gateway, AI SDK, Zod |
+| AI / API | Google Gemini (AI SDK), Zod |
 | Storage | Web Storage(localStorage) + PostgreSQL |
 | Infra | Nginx (Reverse Proxy), Docker (docker-compose) |
 | CI/CD | GitHub Actions |

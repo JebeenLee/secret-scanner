@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import { generateText, Output } from 'ai';
+import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 import { SECRET_TYPES } from './secretTypes.js';
 import { pool, initDb, isDbReady, pingDb } from './db.js';
@@ -9,8 +10,8 @@ import { pool, initDb, isDbReady, pingDb } from './db.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// AI 보조 분석 (Vercel AI Gateway 경유) — 모델은 env 로 교체 가능
-const AI_MODEL = process.env.AI_MODEL || 'google/gemini-3.5-flash';
+// AI 보조 분석 (Google Gemini 직접 호출) — 모델은 env 로 교체 가능
+const AI_MODEL = process.env.AI_MODEL || 'gemini-2.5-flash';
 const VerdictSchema = z.object({
   isReal: z.boolean(),
   confidence: z.enum(['high', 'medium', 'low']),
@@ -124,14 +125,14 @@ app.delete('/api/stats', async (req, res) => {
 
 // AI 보조 분석 — 마스킹된 후보만 입력 (원문 시크릿 전송 X) → 진위 판정 / 수정 제안
 app.post('/api/ai/verify', async (req, res) => {
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return res.status(503).json({ error: 'AI 키가 설정되지 않았습니다', needsKey: true });
   }
   const { type, name, masked, snippet } = req.body || {};
   if (!masked) return res.status(400).json({ error: 'masked required' });
   try {
     const { output } = await generateText({
-      model: AI_MODEL,
+      model: google(AI_MODEL),
       output: Output.object({ schema: VerdictSchema }),
       prompt:
         `코드에서 발견된 하드코딩 의심 시크릿을 평가하세요. 원문 값은 마스킹돼 있습니다.\n` +

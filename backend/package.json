@@ -12,6 +12,7 @@
   "license": "MIT",
   "description": "Secret Scanner API — 시크릿 백과사전 / 익명 통계 / AI 보조 분석",
   "dependencies": {
+    "@ai-sdk/google": "^3.0.80",
     "ai": "^6.0.194",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
